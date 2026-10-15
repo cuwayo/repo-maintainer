@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Repo Sweeper</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wdth,wght@8..144,25..151,100..1000&display=swap" rel="stylesheet">
+<style>
+:root{
+  --primary:#5a3df0;--on-primary:#fff;--primary-c:#dcd3ff;--on-primary-c:#1a0069;
+  --secondary-c:#ffc7e6;--on-secondary-c:#4a0030;
+  --tertiary-c:#d6f26b;--on-tertiary-c:#1f2d00;
+  --peach-c:#ffd2b8;--on-peach:#4a1b00;
+  --error:#c0281c;--on-error:#fff;--error-c:#ffd3cc;--on-error-c:#410002;
+  --bg:#fbf8ff;--surface:#f0ebfa;--surface-hi:#e4ddf3;--on-bg:#1b1a22;--on-var:#4a4659;--outline:#7c768d;
+  --hero-bg:#5a3df0;--hero-fg:#fff;
+  --spring:cubic-bezier(.34,1.7,.5,1);
+  --font:"Roboto Flex",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --primary:#cbbeff;--on-primary:#2a0a9c;--primary-c:#4a2fd6;--on-primary-c:#e9e2ff;
+  --secondary-c:#7a1f55;--on-secondary-c:#ffd0e8;--peach-c:#6b2f12;--on-peach:#ffd8c2;
+  --error:#ffb4ab;--on-error:#690005;--error-c:#93000a;--on-error-c:#ffdad6;
+  --bg:#131118;--surface:#1f1c28;--surface-hi:#2c2838;--on-bg:#e7e2f0;--on-var:#cbc4dc;--outline:#958ea8;
+  --hero-bg:#4a2fd6;--hero-fg:#e9e2ff}}
+:root[data-theme="dark"]{
+  --primary:#cbbeff;--on-primary:#2a0a9c;--primary-c:#4a2fd6;--on-primary-c:#e9e2ff;
+  --secondary-c:#7a1f55;--on-secondary-c:#ffd0e8;--peach-c:#6b2f12;--on-peach:#ffd8c2;
+  --error:#ffb4ab;--on-error:#690005;--error-c:#93000a;--on-error-c:#ffdad6;
+  --bg:#131118;--surface:#1f1c28;--surface-hi:#2c2838;--on-bg:#e7e2f0;--on-var:#cbc4dc;--outline:#958ea8;
+  --hero-bg:#4a2fd6;--hero-fg:#e9e2ff}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--on-bg);font-family:var(--font);font-size:16px;line-height:1.45;min-height:100vh;min-height:100dvh;padding-bottom:150px}
+main{max-width:1120px;margin:0 auto;padding:12px 12px 24px}
+button{font-family:inherit;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+html{-webkit-text-size-adjust:100%}body{overflow-x:hidden}
+:focus-visible{outline:3px solid var(--primary);outline-offset:3px}
+[hidden]{display:none!important}
+svg{display:block}
+
+/* hero */
+.hero{position:relative;overflow:hidden;background:var(--hero-bg);color:var(--hero-fg);border-radius:56px;padding:clamp(24px,5vw,56px);display:grid;grid-template-columns:1.15fr .85fr;gap:24px;align-items:center;transition:padding .5s var(--spring)}
+.hero h1{margin:0;font-size:clamp(3.2rem,11vw,7.5rem);line-height:.86;font-weight:1000;font-stretch:130%;font-variation-settings:"wdth" 130,"opsz" 144;letter-spacing:-.035em}
+.hero .lede{max-width:44ch;font-size:1.1rem;margin:20px 0 0;opacity:.9}
+#cluster{position:relative;height:300px}
+#cluster svg{position:absolute}
+.spin{animation:spin 28s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.theme{position:absolute;top:18px;right:18px;width:48px;height:48px;border-radius:24px;border:0;background:rgba(255,255,255,.2);color:inherit;cursor:pointer;display:grid;place-items:center;z-index:2;transition:border-radius .3s var(--spring)}
+.theme:hover{border-radius:14px}
+.hero.compact{grid-template-columns:1fr;padding:22px 28px}
+.hero.compact #cluster,.hero.compact .lede{display:none}
+.hero.compact h1{font-size:clamp(2rem,6vw,3rem)}
+
+/* token panel */
+.panel{background:var(--surface);border-radius:44px;padding:clamp(20px,4vw,36px);margin-top:12px}
+.panel h2{margin:0 0 6px;font-size:1.9rem;font-weight:800;font-stretch:115%;letter-spacing:-.02em}
+.panel p{margin:0 0 16px;color:var(--on-var);max-width:70ch}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.grow{flex:1 1 260px}
+.in{width:100%;height:64px;border-radius:32px;border:0;background:var(--surface-hi);color:var(--on-bg);font:inherit;font-size:1.05rem;padding:0 28px;transition:border-radius .4s var(--spring),box-shadow .2s}
+.in:focus{outline:none;border-radius:20px;box-shadow:inset 0 0 0 3px var(--primary)}
+.in::placeholder{color:var(--on-var);opacity:.7}
+.btn{height:64px;padding:0 36px;border:0;border-radius:32px;background:var(--primary);color:var(--on-primary);font-size:1.05rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:10px;transition:border-radius .45s var(--spring),transform .35s var(--spring)}
+@media (hover:hover){.btn:hover:not(:disabled){border-radius:18px}}
+.btn:active:not(:disabled){transform:scale(.94)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn.sm{height:48px;padding:0 24px;font-size:.95rem;border-radius:24px}
+.btn.tonal{background:var(--tertiary-c);color:var(--on-tertiary-c)}
+.btn.text{background:transparent;color:var(--primary)}
+.btn.danger{background:var(--error);color:var(--on-error)}
+.check{display:flex;gap:10px;align-items:center;color:var(--on-var);font-size:.95rem;cursor:pointer}
+.check input{width:22px;height:22px;accent-color:var(--primary)}
+
+/* manager */
+.top{display:flex;align-items:flex-end;gap:20px;flex-wrap:wrap;margin:36px 8px 16px}
+.big{font-size:clamp(4rem,14vw,8rem);line-height:.8;font-weight:1000;font-stretch:140%;letter-spacing:-.04em;color:var(--primary)}
+.top span.l{font-size:1.2rem;font-weight:600;max-width:12ch;line-height:1.15;padding-bottom:6px}
+.search{position:relative;flex:1 1 320px}
+.search svg{position:absolute;left:22px;top:20px;width:24px;height:24px;fill:var(--on-var)}
+.search .in{padding-left:60px;background:var(--surface)}
+.group{display:flex;gap:2px;overflow-x:auto;padding:4px 2px;margin:12px 0 4px;scrollbar-width:none}
+.group button{flex:none;height:52px;padding:0 22px;border:0;font-size:.95rem;font-weight:600;background:var(--surface-hi);color:var(--on-bg);cursor:pointer;border-radius:10px;transition:border-radius .45s var(--spring),background .2s,color .2s}
+.group button:first-child{border-radius:26px 10px 10px 26px}
+.group button:last-child{border-radius:10px 26px 26px 10px}
+.group button[aria-pressed=true]{background:var(--primary);color:var(--on-primary);border-radius:26px}
+.meta{margin:8px 10px;color:var(--on-var);font-size:.95rem}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,310px),1fr));gap:10px;margin-top:8px}
+.repo{position:relative;display:flex;gap:16px;align-items:center;text-align:left;border:0;background:var(--surface);color:var(--on-bg);border-radius:36px;padding:16px 22px 16px 16px;cursor:pointer;min-height:104px;transition:border-radius .5s var(--spring),background .25s,transform .3s var(--spring)}
+@media (hover:hover){.repo:hover{background:var(--surface-hi)}}
+.repo:active{transform:scale(.97)}
+.repo[aria-checked=true]{background:var(--primary-c);color:var(--on-primary-c);border-radius:36px 12px 36px 12px}
+.repo .t{min-width:0}
+.repo b{display:block;font-weight:700;font-size:1.1rem;line-height:1.2;overflow-wrap:anywhere}
+.repo small{display:block;margin-top:4px;opacity:.75;font-size:.85rem;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.tag{font-size:.75rem;font-weight:700;padding:3px 11px;border-radius:12px;background:var(--surface-hi);color:var(--on-var)}
+.tag.p{background:var(--secondary-c);color:var(--on-secondary-c)}
+.tag.a{background:var(--tertiary-c);color:var(--on-tertiary-c)}
+.repo[aria-checked=true] .tag{background:rgba(255,255,255,.4);color:inherit}
+.av{width:68px;height:68px;flex:none;overflow:visible}
+.av .sh{transform-origin:28px 28px;transition:transform .6s var(--spring),fill .25s}
+.av text{font-size:24px;font-weight:800;text-anchor:middle;transition:opacity .15s}
+.av .ck{fill:none;stroke:var(--on-primary);stroke-width:4;stroke-linecap:round;stroke-linejoin:round;opacity:0;transition:opacity .2s}
+.c0 .sh{fill:var(--primary-c)}.c0 text{fill:var(--on-primary-c)}
+.c1 .sh{fill:var(--secondary-c)}.c1 text{fill:var(--on-secondary-c)}
+.c2 .sh{fill:var(--tertiary-c)}.c2 text{fill:var(--on-tertiary-c)}
+.c3 .sh{fill:var(--peach-c)}.c3 text{fill:var(--on-peach)}
+.repo[aria-checked=true] .av .sh{fill:var(--primary);transform:rotate(60deg) scale(1.08)}
+.repo[aria-checked=true] .av text{opacity:0}
+.repo[aria-checked=true] .av .ck{opacity:1}
+.repo.busy{opacity:.45;pointer-events:none}
+.repo.fail{box-shadow:inset 0 0 0 3px var(--error)}
+.empty{text-align:center;padding:56px 16px;color:var(--on-var);font-size:1.1rem}
+
+/* floating toolbar */
+.tb{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translate(-50%,220%);width:max-content;max-width:calc(100% - 20px);background:var(--primary);color:var(--on-primary);border-radius:44px;padding:10px 10px 10px 26px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:center;transition:transform .6s var(--spring);box-shadow:0 12px 40px rgba(60,30,200,.4);z-index:5}
+.tb.show{transform:translate(-50%,0)}
+.tb .n{font-weight:1000;font-size:1.6rem;font-stretch:130%;margin-right:6px}
+.tb .btn{height:56px;padding:0 22px;border-radius:28px;font-size:.95rem}
+.tb .btn svg{width:22px;height:22px;fill:currentColor}
+.tb .btn.dg{background:var(--error-c);color:var(--on-error-c)}
+.tb .btn.ar{background:var(--tertiary-c);color:var(--on-tertiary-c)}
+.tb .btn.un{background:var(--secondary-c);color:var(--on-secondary-c)}
+
+/* dialog */
+dialog{border:0;border-radius:52px;padding:32px;background:var(--bg);color:var(--on-bg);width:min(520px,calc(100% - 20px));max-height:88vh;overflow:auto}
+dialog::backdrop{background:rgba(10,5,30,.6)}
+dialog[open]{animation:pop .55s var(--spring)}
+@keyframes pop{from{transform:scale(.7) translateY(40px);opacity:0}}
+dialog h2{margin:12px 0 8px;font-size:1.8rem;font-weight:800;font-stretch:115%;line-height:1.1}
+dialog p{margin:0 0 12px;color:var(--on-var)}
+.list{max-height:150px;overflow:auto;background:var(--surface);border-radius:26px;padding:14px 20px;font-size:.9rem;white-space:pre;margin:12px 0}
+.wave{width:100%;height:20px;margin:18px 0 8px;overflow:visible}
+.wave .wv{animation:wv 1s linear infinite}
+@keyframes wv{to{transform:translateX(-24px)}}
+.log{font-size:.85rem;max-height:140px;overflow:auto;color:var(--on-var)}
+.log .bad{color:var(--error)}
+.snack{position:fixed;top:calc(14px + env(safe-area-inset-top,0px));left:50%;transform:translate(-50%,-220%);background:var(--on-bg);color:var(--bg);padding:16px 28px;border-radius:28px;font-weight:600;transition:transform .55s var(--spring);z-index:20;max-width:calc(100% - 20px)}
+.snack.show{transform:translate(-50%,0)}
+@media (max-width:760px){
+ main{padding:8px 8px 20px}
+ .hero{grid-template-columns:1fr;border-radius:36px;padding:22px 20px 28px;gap:14px}
+ .hero h1{font-size:clamp(2.6rem,13vw,4.2rem);font-stretch:100%;font-variation-settings:"wdth" 100,"opsz" 144}
+ .hero .lede{font-size:1rem;margin-top:14px}
+ #cluster{height:150px;order:-1}
+ #cluster svg:nth-child(1){width:120px!important;top:0!important;left:0!important;right:auto!important}
+ #cluster svg:nth-child(2){width:84px!important;top:46px!important;left:104px!important;right:auto!important}
+ #cluster svg:nth-child(3){width:64px!important;top:auto!important;bottom:0!important;left:204px!important}
+ #cluster svg:nth-child(4){width:44px!important;top:8px!important;left:180px!important;right:auto!important}
+ .hero.compact{padding:18px 20px}
+ .hero.compact h1{padding-right:56px}
+ .theme{top:14px;right:14px;width:44px;height:44px}
+ .panel{border-radius:32px;padding:22px 18px}
+ .panel h2{font-size:1.5rem}
+ #load{width:100%;justify-content:center}
+ .in{height:56px}
+ .btn{height:56px}
+ .top{margin:28px 4px 12px;gap:12px}
+ .grid{gap:8px}
+ .repo{border-radius:28px;padding:14px 16px 14px 14px;gap:12px}
+ .repo[aria-checked=true]{border-radius:28px 10px 28px 10px}
+ .av{width:56px;height:56px}
+ .tb{padding:8px 8px 8px 20px;gap:6px}
+ .tb .btn{width:54px;height:54px;padding:0;justify-content:center}
+ .tb .btn span{display:none}
+ dialog{padding:22px;border-radius:36px}
+ dialog h2{font-size:1.45rem}
+ .btn.sm{height:48px}
+ .snack{width:calc(100% - 20px);text-align:center}
+}
+@media (prefers-reduced-motion:reduce){*{transition-duration:.01ms!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+  <section class="hero" id="hero">
+    <button class="theme" id="theme" aria-label="Toggle light and dark theme"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zm0 16V5a7 7 0 0 1 0 14z"/></svg></button>
+    <div>
+      <h1>Repo<br>Sweeper</h1>
+      <p class="lede">Select a pile of GitHub repositories and archive or delete them in one pass. Everything runs in this page. Your token only ever goes to api.github.com.</p>
+    </div>
+    <div id="cluster" aria-hidden="true"></div>
+  </section>
+
+  <section class="panel" id="auth">
+    <h2>Paste your token</h2>
+    <p>Classic PAT: <b>repo</b> to archive, plus <b>delete_repo</b> to delete. Fine-grained PAT: <b>Administration → read and write</b> on the repositories you want to change.</p>
+    <div class="row">
+      <input class="in grow" id="token" type="password" autocomplete="off" spellcheck="false" placeholder="ghp_… or github_pat_…" aria-label="GitHub personal access token">
+      <button class="btn" id="load">Load repositories</button>
+    </div>
+    <div class="row" style="margin-top:16px;gap:24px">
+      <label class="check"><input type="checkbox" id="remember"> Remember for this tab</label>
+      <label class="check"><input type="checkbox" id="orgs"> Include organization repos I administer</label>
+    </div>
+    <p id="who" style="margin:14px 0 0"></p>
+  </section>
+
+  <section id="manager" hidden>
+    <div class="top">
+      <div class="big" id="total">0</div>
+      <span class="l">repositories you can manage</span>
+      <label class="search"><svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg><input class="in" id="q" type="search" placeholder="Search name or description" aria-label="Search repositories"></label>
+    </div>
+    <div class="group" id="chips" role="group" aria-label="Filters">
+      <button data-f="private" aria-pressed="false">Private</button>
+      <button data-f="public" aria-pressed="false">Public</button>
+      <button data-f="fork" aria-pressed="false">Forks</button>
+      <button data-f="archived" aria-pressed="false">Archived</button>
+      <button data-f="active" aria-pressed="false">Not archived</button>
+      <button data-f="stale" aria-pressed="false">Quiet for 1 year</button>
+    </div>
+    <div class="row meta"><span id="count"></span>
+      <button class="btn text sm" id="selAll">Select all shown</button>
+      <button class="btn text sm" id="selNone">Clear selection</button></div>
+    <div class="grid" id="grid" role="group" aria-label="Repositories"></div>
+    <div class="empty" id="empty" hidden>Nothing matches. Remove a filter or change the search.</div>
+  </section>
+</main>
+
+<div class="tb" id="tb" role="region" aria-label="Bulk actions">
+  <span class="n" id="n">0</span>
+  <button class="btn ar" id="archive" aria-label="Archive selected"><svg viewBox="0 0 24 24"><path d="M20.54 5.23l-1.39-1.68A1.5 1.5 0 0 0 18 3H6c-.47 0-.88.21-1.16.55L3.46 5.23C3.17 5.57 3 6.02 3 6.5V19a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6.5c0-.48-.17-.93-.46-1.27zM12 17.5L6.5 12H10v-2h4v2h3.5L12 17.5zM5.12 5l.81-1h12l.94 1H5.12z"/></svg><span>Archive</span></button>
+  <button class="btn un" id="unarchive" aria-label="Unarchive selected"><svg viewBox="0 0 24 24"><path d="M20.55 5.22l-1.39-1.68A1.51 1.51 0 0 0 18 3H6c-.47 0-.88.21-1.15.55L3.46 5.22C3.17 5.57 3 6.01 3 6.5V19a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6.5c0-.49-.17-.93-.45-1.28zM12 9.5l5.5 5.5H14v2h-4v-2H6.5L12 9.5zM5.12 5l.82-1h12l.94 1H5.12z"/></svg><span>Unarchive</span></button>
+  <button class="btn dg" id="delete" aria-label="Delete selected"><svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg><span>Delete</span></button>
+</div>
+
+<dialog id="dlg" aria-labelledby="dt">
+  <svg id="dIcon" width="72" height="72" viewBox="0 0 56 56" aria-hidden="true"></svg>
+  <h2 id="dt"></h2>
+  <p id="dd"></p>
+  <div class="list" id="dl"></div>
+  <input class="in" id="typed" autocomplete="off" aria-label="Confirmation text" hidden>
+  <svg class="wave" id="wave" viewBox="0 0 300 20" preserveAspectRatio="none" hidden>
+    <defs><clipPath id="wc"><rect id="wr" x="0" y="0" width="0" height="20"/></clipPath></defs>
+    <line x1="0" y1="10" x2="300" y2="10" stroke="var(--surface-hi)" stroke-width="5" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
+    <g clip-path="url(#wc)"><path class="wv" id="wp" fill="none" stroke="var(--primary)" stroke-width="5" stroke-linecap="round" vector-effect="non-scaling-stroke"/></g>
+  </svg>
+  <div class="log" id="log" hidden aria-live="polite"></div>
+  <div class="row" style="justify-content:flex-end;margin-top:18px">
+    <button class="btn text sm" id="cancel">Cancel</button>
+    <button class="btn sm" id="go">Confirm</button>
+  </div>
+</dialog>
+<div class="snack" id="snack" role="status"></div>
+
+<script>
+(()=>{
+const $=s=>document.querySelector(s);
+const API="https://api.github.com";
+let token="",repos=[],sel=new Set(),filters=new Set(),action=null,running=false;
+
+/* shapes: r = R(1 + a cos(nθ)) gives cookie / flower / clover outlines */
+const SH=[[9,.07],[6,.17],[4,.15],[12,.05],[8,.11],[0,0]];
+function path(n,a,s=56){const R=s/2*.93,p=[];for(let i=0;i<=140;i++){const t=i/140*6.2832,r=R*(1+a*Math.cos(n*t))/(1+a);p.push((s/2+r*Math.cos(t)).toFixed(1)+","+(s/2+r*Math.sin(t)).toFixed(1))}return"M"+p.join("L")+"Z"}
+const PATHS=SH.map(([n,a])=>path(n,a));
+
+/* hero cluster: one slow-turning flower, the page's single idle motion */
+$("#cluster").innerHTML=[
+ ["top:0;left:6%;width:58%","var(--tertiary-c)",1,"spin"],
+ ["top:38%;right:0;width:46%","var(--secondary-c)",0,""],
+ ["bottom:0;left:22%;width:36%","var(--peach-c)",2,""],
+ ["top:2%;right:6%;width:24%","var(--primary-c)",5,""]
+].map(([pos,fill,i,cls])=>`<svg style="${pos}" viewBox="0 0 56 56"><path class="${cls}" style="transform-origin:28px 28px;fill:${fill}" d="${PATHS[i]}"/></svg>`).join("");
+$("#cluster svg:nth-child(4) path").style.fill="#ffffff55";
+
+try{const t=sessionStorage.getItem("rs_token");if(t){$("#token").value=t;$("#remember").checked=true}}catch(e){}
+$("#theme").onclick=()=>{const d=document.documentElement,dark=getComputedStyle(d).getPropertyValue("--bg").trim()==="#131118";d.dataset.theme=dark?"light":"dark"};
+
+function snack(m){const s=$("#snack");s.textContent=m;s.classList.add("show");clearTimeout(snack.t);snack.t=setTimeout(()=>s.classList.remove("show"),3800)}
+async function gh(p,o={}){
+  const r=await fetch(API+p,{...o,headers:{Accept:"application/vnd.github+json","X-GitHub-Api-Version":"2022-11-28",Authorization:"Bearer "+token,...(o.body?{"Content-Type":"application/json"}:{})}});
+  if(!r.ok){let m=r.statusText;try{m=(await r.json()).message||m}catch(e){}const e=new Error(r.status+": "+m);e.status=r.status;throw e}
+  return r.status===204?null:r.json();
+}
+function ago(d){const x=Math.floor((Date.now()-new Date(d))/864e5);return x<1?"today":x<31?x+"d ago":x<365?Math.floor(x/30)+"mo ago":Math.floor(x/365)+"y ago"}
+
+$("#load").onclick=async()=>{
+  token=$("#token").value.trim();
+  if(!token){snack("Paste a token first.");return}
+  try{$("#remember").checked?sessionStorage.setItem("rs_token",token):sessionStorage.removeItem("rs_token")}catch(e){}
+  const b=$("#load");b.disabled=true;
+  b.innerHTML=`<svg width="28" height="28" viewBox="0 0 56 56" class="spin" style="animation-duration:1.4s"><path d="${PATHS[1]}" fill="currentColor"/></svg>Loading`;
+  try{
+    const me=await gh("/user");
+    $("#who").textContent="Signed in as "+me.login;
+    const aff=$("#orgs").checked?"owner,organization_member":"owner";
+    let all=[];
+    for(let p=1;p<=50;p++){
+      const pg=await gh(`/user/repos?per_page=100&page=${p}&sort=pushed&affiliation=${aff}`);
+      all=all.concat(pg);if(pg.length<100)break;
+    }
+    repos=all.filter(r=>r.permissions&&r.permissions.admin);
+    sel.clear();$("#manager").hidden=false;$("#hero").classList.add("compact");render();
+    snack("Loaded "+repos.length+" repositories.");
+  }catch(e){snack(e.status===401?"GitHub rejected the token. Check it and try again.":"Could not load: "+e.message)}
+  b.disabled=false;b.textContent="Reload";
+};
+
+function shown(){
+  const q=$("#q").value.toLowerCase().trim(),yr=Date.now()-365*864e5;
+  return repos.filter(r=>{
+    if(q&&!(r.full_name+" "+(r.description||"")).toLowerCase().includes(q))return false;
+    for(const f of filters){
+      if(f==="private"&&!r.private)return false;
+      if(f==="public"&&r.private)return false;
+      if(f==="fork"&&!r.fork)return false;
+      if(f==="archived"&&!r.archived)return false;
+      if(f==="active"&&r.archived)return false;
+      if(f==="stale"&&new Date(r.pushed_at)>yr)return false;
+    }return true});
+}
+function render(){
+  const list=shown(),g=$("#grid");g.textContent="";
+  list.forEach(r=>{
+    const b=document.createElement("button");
+    b.className="repo";b.dataset.id=r.id;b.setAttribute("role","checkbox");b.setAttribute("aria-checked",sel.has(r.id));
+    b.innerHTML=`<svg class="av c${(r.id>>3)%4}" viewBox="0 0 56 56"><path class="sh" d="${PATHS[r.id%PATHS.length]}"/><text x="28" y="36"></text><path class="ck" d="M18 29l7 7 13-14"/></svg><div class="t"><b></b><small></small><div class="tags"></div></div>`;
+    b.querySelector("text").textContent=r.name[0].toUpperCase();
+    b.querySelector("b").textContent=r.full_name;
+    b.querySelector("small").textContent=(r.description||"No description")+" · pushed "+ago(r.pushed_at);
+    const t=b.querySelector(".tags"),add=(x,c)=>{const s=document.createElement("span");s.className="tag "+(c||"");s.textContent=x;t.append(s)};
+    add(r.private?"Private":"Public",r.private?"p":"");
+    if(r.fork)add("Fork");if(r.archived)add("Archived","a");if(r.stargazers_count)add("★ "+r.stargazers_count);
+    b.onclick=()=>{sel.has(r.id)?sel.delete(r.id):sel.add(r.id);b.setAttribute("aria-checked",sel.has(r.id));upd()};
+    g.append(b);
+  });
+  $("#empty").hidden=list.length>0;
+  $("#total").textContent=repos.length;
+  $("#count").textContent=`Showing ${list.length} of ${repos.length}`;
+  upd();
+}
+function upd(){
+  $("#n").textContent=sel.size;$("#tb").classList.toggle("show",sel.size>0);
+  const p=repos.filter(r=>sel.has(r.id));
+  $("#archive").disabled=!p.some(r=>!r.archived);
+  $("#unarchive").disabled=!p.some(r=>r.archived);
+}
+$("#q").oninput=render;
+$("#chips").onclick=e=>{const c=e.target.closest("button");if(!c)return;const f=c.dataset.f;
+  filters.has(f)?filters.delete(f):filters.add(f);c.setAttribute("aria-pressed",filters.has(f));render()};
+$("#selAll").onclick=()=>{shown().forEach(r=>sel.add(r.id));render()};
+$("#selNone").onclick=()=>{sel.clear();render()};
+
+const dlg=$("#dlg");
+function open(kind){
+  const p=repos.filter(r=>sel.has(r.id));
+  const targets=kind==="archive"?p.filter(r=>!r.archived):kind==="unarchive"?p.filter(r=>r.archived):p;
+  if(!targets.length)return;
+  action={kind,targets};
+  const nm={archive:"Archive",unarchive:"Unarchive",delete:"Delete"}[kind],del=kind==="delete";
+  $("#dIcon").innerHTML=`<path d="${PATHS[1]}" fill="${del?"var(--error)":"var(--primary)"}"/>`;
+  $("#dt").textContent=`${nm} ${targets.length} ${targets.length===1?"repository":"repositories"}?`;
+  $("#dd").textContent=del?"This permanently removes the repositories with their issues and pull requests. You can't undo it.":kind==="archive"?"Archived repositories become read-only. You can unarchive them later.":"These repositories become writable again.";
+  $("#dl").textContent=targets.map(r=>r.full_name).join("\n");
+  $("#typed").hidden=!del;$("#typed").value="";$("#typed").placeholder=`Type DELETE ${targets.length} to confirm`;
+  $("#wave").hidden=true;$("#log").hidden=true;$("#log").textContent="";
+  const go=$("#go");go.hidden=false;go.textContent=nm;go.className="btn sm"+(del?" danger":"");go.disabled=del;
+  $("#cancel").textContent="Cancel";$("#cancel").disabled=false;dlg.showModal();
+}
+$("#archive").onclick=()=>open("archive");
+$("#unarchive").onclick=()=>open("unarchive");
+$("#delete").onclick=()=>open("delete");
+$("#typed").oninput=()=>{$("#go").disabled=$("#typed").value.trim()!==`DELETE ${action.targets.length}`};
+$("#cancel").onclick=()=>{if(!running)dlg.close()};
+dlg.addEventListener("cancel",e=>{if(running)e.preventDefault()});
+dlg.addEventListener("close",()=>{action=null});
+
+/* wavy progress */
+(()=>{let d="M0,10";for(let x=0;x<=348;x+=2)d+=`L${x},${(10+4*Math.sin(x/24*6.2832)).toFixed(1)}`;$("#wp").setAttribute("d",d)})();
+
+$("#go").onclick=async()=>{
+  if(running||!action)return;
+  running=true;const {kind,targets}=action;
+  $("#go").hidden=true;$("#cancel").disabled=true;$("#typed").hidden=true;
+  $("#wave").hidden=false;$("#log").hidden=false;
+  let done=0,ok=0;
+  for(const r of targets){
+    const card=document.querySelector(`.repo[data-id="${r.id}"]`);card&&card.classList.add("busy");
+    const line=document.createElement("div");
+    try{
+      if(kind==="delete")await gh("/repos/"+r.full_name,{method:"DELETE"});
+      else await gh("/repos/"+r.full_name,{method:"PATCH",body:JSON.stringify({archived:kind==="archive"})});
+      ok++;sel.delete(r.id);
+      if(kind==="delete")repos=repos.filter(x=>x.id!==r.id);else r.archived=kind==="archive";
+      line.textContent="Done: "+r.full_name;
+    }catch(e){
+      line.className="bad";line.textContent="Failed: "+r.full_name+" ("+e.message+(e.status===403||e.status===404?"; check token permissions":"")+")";
+      card&&card.classList.add("fail");
+    }
+    card&&card.classList.remove("busy");
+    $("#log").append(line);$("#log").scrollTop=1e9;
+    $("#wr").setAttribute("width",++done/targets.length*300);
+    await new Promise(s=>setTimeout(s,350));
+  }
+  running=false;$("#cancel").disabled=false;$("#cancel").textContent="Close";
+  snack(`${ok} of ${targets.length} finished.`);render();
+};
+})();
+</script>
+</body>
+</html>
